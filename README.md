@@ -1,591 +1,501 @@
-# Founders Scout
+# Founders Scout (Scoutify)
 
-The formal product requirements document lives at [docs/PRD.md](/Users/adebayostephenoluwadamilola/Desktop/founders_scout/docs/PRD.md:1).
+[![Flutter](https://img.shields.io/badge/Flutter-3.9+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-Founders Scout is a multi-vertical lead generation app that turns Google Maps business data into a curated feed of opportunities for freelancers, consultants, and boutique agencies. Instead of only looking for businesses without websites, the product adapts to the user's niche and identifies the specific "digital gap" that signals a sales opportunity.
+**Founders Scout** (branded in-app as **Scoutify**) is a premium, multi-vertical lead generation engine purpose-built for freelancers, consultants, and boutique agencies. It transforms raw Google Maps business data into a curated, actionable feed of sales opportunities by identifying **digital gaps** — specific service deficiencies that signal a business needs your help.
 
-This repository is the Flutter client shell for the product. The intended production system pairs this mobile app with a Go backend that scans Google Places data, applies niche-aware filters, enriches promising leads, and streams them back to the app in real time.
+> **Stop chasing cold leads. Founders Scout shows you exactly which nearby businesses need your service, why they need it, and how to reach them — all from your phone.**
 
-## Google Maps Setup
+---
 
-The radar home screen uses `google_maps_flutter`.
+## Table of Contents
 
-- Put `GOOGLE_MAPS_API_KEY=...` in the root `.env` file.
-- Android reads the key from `.env` during Gradle configuration.
-- iOS includes the same `.env` through xcconfig so `Info.plist` can resolve `GMSApiKey`.
-- Use `.env.example` as the template if you need to recreate the local env file.
+- [Core Concept](#core-concept)
+- [Who It's For](#who-its-for)
+- [How It Works](#how-it-works)
+- [Niche Intelligence System](#niche-intelligence-system)
+- [Key Features](#key-features)
+  - [Onboarding & Setup Wizard](#-onboarding--setup-wizard)
+  - [Radar Map View](#-radar-map-view)
+  - [Live Analysis Engine](#-live-analysis-engine)
+  - [Curated Lead Feed](#-curated-lead-feed)
+  - [AI Pitch Generator](#-ai-pitch-generator)
+  - [Lead Detail & Outreach](#-lead-detail--outreach)
+  - [Stats Dashboard](#-stats-dashboard)
+  - [Profile & Preferences](#-profile--preferences)
+- [Tech Stack](#tech-stack)
+  - [Frontend (Flutter)](#frontend-flutter)
+  - [Backend (Go)](#backend-go)
+  - [Infrastructure](#infrastructure)
+- [Architecture](#architecture)
+  - [App Architecture (Flutter)](#app-architecture-flutter)
+  - [Backend Scan Pipeline](#backend-scan-pipeline)
+- [Design System](#design-system)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-## Product Vision
+---
 
-Founders Scout should feel like a premium scouting instrument for modern service providers. A web designer, photographer, SEO consultant, social media manager, interior designer, or any other niche operator should be able to open the app, choose what service they offer, and immediately see nearby businesses that visibly need that service.
+## Core Concept
 
-The product is not website-only.
+Most lead generation tools return massive, noisy datasets that still require heavy manual filtering. Founders Scout flips this model: **instead of showing you every business, it shows you only the businesses with a specific, visible, serviceable problem.**
 
-The core idea is:
+The core thesis:
 
-1. The user defines what they sell.
-2. The system maps that choice to a "digital gap" rule set.
-3. The backend scans Google Maps and business metadata.
-4. The app surfaces only the businesses with the strongest fit.
-5. The user contacts those businesses through direct outreach flows such as WhatsApp, phone, or map handoff.
+1. You define **what service you sell** (e.g., web design, photography, SEO, social media management)
+2. The system maps your service to a **digital gap rule set** (e.g., "no website" for web developers, "fewer than 2 photos" for photographers)
+3. The backend scans Google Maps and business metadata, applying niche-aware filters
+4. The app surfaces only the businesses that match your gap criteria, scored by opportunity strength
+5. You contact them directly through one-tap outreach — WhatsApp, phone call, or Google Maps handoff
 
-## Core Product Thesis
+---
 
-Most lead tools show massive, noisy lists. Founders Scout should do the opposite. It should narrow the market to a tactical feed of businesses that are visibly under-optimized in a way the user can fix.
+## Who It's For
 
-Examples:
+- **Freelance web developers & designers** — find businesses without a website or with an outdated web presence
+- **Photographers & videographers** — discover businesses with weak or missing visual content
+- **SEO specialists** — target businesses with enough reviews to matter but low ratings that signal poor digital reputation
+- **Social media managers** — identify businesses with no visible social media presence
+- **Interior designers** — find businesses whose presentation, pricing position, or category suggest a design upgrade opportunity
+- **Small digital agencies** — equip sales teams with a mobile-first prospecting tool
+- **Growth freelancers** — looking for location-based business prospecting in any niche
 
-- A web developer sees businesses with no website.
-- A photographer sees businesses with weak or missing photography.
-- An SEO specialist sees businesses with enough review volume to matter but weak ratings that suggest poor digital reputation.
-- A social media manager sees businesses with weak or missing social presence.
-- An interior designer can be routed to businesses whose presentation, pricing position, or category suggest a design uplift opportunity.
+---
 
-## Multi-Vertical Orchestration
+## How It Works
 
-Founders Scout is a shell product. Its behavior changes based on the selected niche.
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Choose    │     │    Set      │     │   Scan &    │     │  Outreach   │
+│  Your Service│ ──► │  Location   │ ──► │   Analyze   │ ──► │   & Close   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+  Web Dev, SEO,        City/Area        Google Maps +       WhatsApp, Call,
+  Photography, etc.                     Gap Detection       Maps Handoff
+```
 
-Each niche has:
+### Step-by-Step Flow
 
-- A `niche_id`
-- A display label
-- A gap detection rule
-- A lead scoring profile
-- A pitch generation style
-- A recommended CTA priority
+1. **Launch** — Open the app (branded as **Scoutify**)
+2. **Onboard** — Select your service niche and configure what gaps to look for
+3. **Set Location** — Choose your target city or area
+4. **Scan** — The app connects to the backend (or uses Google Places directly) to discover nearby businesses
+5. **Analyze** — Each business is checked against your niche gap rules
+6. **Review Leads** — Browse a curated feed of matched opportunities
+7. **Inspect** — Tap any lead for detailed gap analysis, business metadata, and photos
+8. **Engage** — One-tap outreach via WhatsApp, phone call, or Google Maps
 
-### Example Niche Mapping
+---
 
-| Niche | Example `niche_id` | Digital Gap Logic |
-| --- | --- | --- |
+## Niche Intelligence System
+
+Founders Scout is a **multi-vertical shell product**. Its behavior changes dynamically based on the selected niche, without requiring code changes.
+
+| User Service | Niche ID | Gap Filter Logic |
+|---|---|---|
 | Web Developer | `web_dev` | `place.website == null` |
-| Web Designer | `web_design` | `place.website == null` or outdated/mobile-poor site from metadata audit |
-| Photographer | `photography` | `place.photos.length < 2` or low-quality/low-resolution photo signal |
-| Social Media Manager | `social_media` | `place.social_links == null` or no detectable social presence |
-| SEO Expert | `seo` | `place.rating < 3.5 && place.user_ratings_total > 20` |
-| SEO Specialist | `seo_local` | `place.rating < 3.8 && place.user_ratings_total > 15` |
-| Interior Designer | `interior_design` | category-specific rule, for example `restaurant` or `retail` venues with low presentation signals |
+| Web Designer | `web_design` | `place.website == null` OR weak site quality signal |
+| Photographer | `photography` | `place.photos.length < 2` OR low-res image signal |
+| Social Media Manager | `social_media` | `place.social_links == null` |
+| SEO Expert | `seo` | `place.rating < 3.5` AND `place.user_ratings_total > 20` |
+| SEO Specialist (Local) | `seo_local` | `place.rating < 3.8` AND `place.user_ratings_total > 15` |
+| Interior Designer | `interior_design` | Category-aware presentation/opportunity rule |
 
-The final implementation should support arbitrary future niches through config rather than hardcoded branches.
+The rule system is **configurable and extensible** — new niches can be added through configuration and rule registration without modifying core application logic.
 
-## User Flow
+---
 
-### 1. Onboarding
+## Key Features
 
-The user selects the kind of service they provide:
+### 📋 Onboarding & Setup Wizard
 
-- Web Developer
-- Photographer
-- SEO Expert
-- Social Media Manager
-- Interior Designer
-- Additional niches added later
+The initial setup guides users through configuring their prospecting preferences:
 
-This choice should be persisted locally using `SharedPreferences`, then mirrored to backend session context so scans and pitches remain niche-aware.
+- **Service Selection** — Choose from multiple service verticals (Web Development, Photography, SEO, Social Media, Interior Design, etc.)
+- **Gap Customization** — Select which specific digital gaps to prioritize (e.g., "No Website", "Weak Reviews", "No Social Presence", "Poor Photography")
+- **Category Targeting** — Choose business categories to focus on (Restaurants, Nightclubs, Gyms, Salons, Retail, etc.)
+- **Location Setup** — Enter a target city or neighborhood for localized prospecting
+- **Country Selection** — Support for location-based targeting across countries
 
-### 2. Scan
+### 🗺️ Radar Map View
 
-The user lands on the radar screen and starts a scan around a selected city, map area, or current location.
+A visually striking map-based lead discovery interface:
 
-The backend:
+- **Google Maps Integration** — Powered by `google_maps_flutter` with custom dark map styling
+- **Interactive Markers** — Businesses are displayed as map markers at their real locations
+- **Bottom Lead Sheet** — A draggable sheet lists nearby leads below the map for quick browsing
+- **Pulse Animation** — Circular scan pulse animation creates a live streaming feel during discovery
+- **Tap-to-Inspect** — Tap a marker or list item to open detailed lead information
+- **Geofence Support** — Location-aware filtering based on user-defined geofences
 
-- queries Google Places nearby search or text search
-- paginates and throttles requests
-- applies niche-aware gap rules
-- enriches promising businesses with place details
-- streams partial lead results back to the app
+### 🔬 Live Analysis Engine
 
-### 3. Filter
+The scanning and analysis experience is designed to feel like a premium, real-time instrument:
 
-Only leads that match the user's gap criteria should appear in the feed. The app should prioritize signal quality over volume.
+- **Real-Time Progress** — Live status updates as the system checks businesses
+- **Neural Connection Visualizer** — An animated neural network-inspired widget that makes scanning feel intelligent and dynamic
+- **Helper Message Rotation** — Contextual messages that update every few seconds to keep users informed
+- **Scan Caching** — Results are cached locally to avoid redundant API calls (with configurable cache invalidation)
+- **Google Places API Integration** — Direct integration for fetching and analyzing business data
 
-### 4. Inspect
+### 📊 Curated Lead Feed
 
-The user taps a marker or lead card to open a detailed profile with business imagery, contact options, map context, and a clear "Gap Alert" explanation.
+A fast, triage-focused list of discovered opportunities:
 
-### 5. Engage
+- **Glassmorphic Cards** — Premium frosted-glass card design for each lead
+- **Gap Badges** — Color-coded badges showing which digital gaps were detected
+- **Quick Actions** — WhatsApp, call, and maps buttons directly on each card
+- **Sorting & Filtering** — Organize leads by gap type, rating, distance, or opportunity score
+- **Pull-to-Refresh** — Trigger a new scan from the feed
 
-The user can:
+### 🤖 AI Pitch Generator
 
-- copy the business number
-- call directly
-- open the location in Google Maps
-- generate and send a niche-specific WhatsApp pitch
+An intelligent outreach companion powered by Mistral AI:
 
-## Screen System
+- **Conversational Interface** — Chat-style UI for interacting with "Scout AI"
+- **Lead Analysis** — Ask the AI to analyze a lead and explain why it's a good fit
+- **Pitch Generation** — Generate personalized outreach messages tailored to the lead and your service
+- **Tone Customization** — Choose from multiple pitch templates (Professional, Friendly, Direct, etc.)
+- **Template Library** — Save and reuse successful pitch templates
+- **One-Tap Copy** — Copy generated pitches to clipboard for use in WhatsApp or email
+- **Conversation History** — Browse past pitch threads and regenerate as needed
+- **Pricing Guidance** — Ask the AI for pricing recommendations based on the opportunity
 
-The HTML mockup at `/Users/adebayostephenoluwadamilola/Desktop/founders_scout_human_screens.html` shows a broader, app-store-grade product vision than the initial three-screen PRD. It includes onboarding, radar, lead feed, pitch studio, and profile/admin flows.
+### 📍 Lead Detail & Outreach
 
-That mockup currently suggests these major screen groups:
+Deep dive into individual business opportunities:
 
-- Onboarding
-- Radar
-- Leads
-- Pitch AI
-- Profile
+- **Hero Image** — Full-width business photo when available
+- **Gap Summary** — Clear, visual breakdown of detected digital gaps with niche-specific reasoning
+- **Business Metadata** — Rating, review count, address, phone, website status, hours, and more
+- **Action Bar** — Persistent floating bar with:
+  - 📞 **Call** — One-tap phone call
+  - 📋 **Copy Number** — Copy phone to clipboard
+  - 💬 **WhatsApp Pitch** — Open WhatsApp with a pre-filled pitch message
+  - 🗺️ **Open in Maps** — Navigate to the business in Google Maps
+- **Outreach Tracking** — Log when you've contacted a lead and track follow-up status
 
-### Priority MVP Screens
+### 📈 Stats Dashboard
 
-These are the screens that should be treated as the first shippable flow:
+Performance tracking for your prospecting activity:
 
-1. Niche Onboarding
-2. Radar Map
-3. Live Scanning State
-4. Lead Feed
-5. Lead Detail
-6. Gap Report
-7. Pitch Generator
-8. WhatsApp / Call / Maps action layer
+- **Scan History** — View past scans and their results
+- **Lead Statistics** — Total leads found, contacted, converted
+- **Gap Distribution** — See which digital gaps are most common in your area
+- **Activity Timeline** — Track your outreach activity over time
 
-### Expanded Product Screens
+### 👤 Profile & Preferences
 
-The mockup also points toward a more complete premium app with:
+User account management:
 
-- sign up and login
-- saved lead collections
-- search
-- pitch history
-- analytics dashboard
-- notification/alert center
-- settings
-- upgrade/paywall flow
+- **Firebase Authentication** — Secure sign-up and login
+- **Profile Management** — Update name, niche preferences, and saved locations
+- **Notification Settings** — Configure daily reminders and scan-complete notifications
+- **Morning Reminder** — Scheduled 8 AM notification to start your daily prospecting
 
-## Design System: Industrial Tech
+---
 
-The visual direction should feel tactical, premium, dark, and performance-oriented rather than playful or generic.
+## Tech Stack
 
-### Core Palette
+### Frontend (Flutter)
 
-- Background: `#0D0D0D`
-- Accent: `#00E5FF`
-- Border: `#FFFFFF1A`
-- Text primary: `#F5F7FA`
-- Text secondary: `#A7B0BE`
-- Success/support accent: restrained green when needed for live scan or positive status
-- Warning/gap accent: amber or red for high-value missing assets
+| Technology | Purpose |
+|---|---|
+| **Flutter 3.x** (Dart 3.x) | Cross-platform mobile UI framework |
+| **google_maps_flutter** | Interactive map rendering and place markers |
+| **Firebase Core / Auth / Firestore** | Authentication, user data, and cloud persistence |
+| **cloud_firestore** | Firestore client with offline persistence |
+| **url_launcher** | Deep links for phone, WhatsApp, and Maps |
+| **Lottie** | Rich vector animations for scan states |
+| **Mistral AI API** | AI-powered pitch generation and lead analysis |
+| **flutter_local_notifications** | Local push notifications and reminders |
+| **timezone** | Timezone-aware scheduling |
+| **Google Fonts** | Custom typography |
+| **cached_network_image** | Efficient image loading and caching |
+| **http** | HTTP client for API communication |
 
-### UI Principles
+### Backend (Go)
 
-- Dark map with a custom Google Maps JSON style
-- Neon cyan for active states, scan rings, markers, highlights, and CTA emphasis
-- Glassmorphic cards with blur around `15px`
-- Thin luminous borders, low-opacity whites, and subtle depth layers
-- Dense information layout that still feels premium and fast
-- Motion should suggest scanning, acquisition, and live intelligence
+| Technology | Purpose |
+|---|---|
+| **Go 1.22+** | High-performance backend runtime |
+| **Google Places API** | Business data fetching (nearby search, text search, place details) |
+| **gRPC (planned)** | Real-time lead streaming to clients |
+| **PostgreSQL (planned)** | Persistent lead and user data storage |
+| **Redis (planned)** | In-memory caching for scan results and rate limiting |
+| **Worker Pool** | Bounded goroutine worker pool for concurrent Places API queries |
+| **Token Bucket** | Rate limiter for API quota management |
 
-### Component Direction
+### Infrastructure
 
-- Lead cards should use blurred translucent surfaces
-- Gap badges should be bold, compact, and immediately legible
-- Map markers should glow in cyan, with urgency states in amber/red
-- Bottom sheets should feel like control panels rather than consumer app drawers
+| Service | Purpose |
+|---|---|
+| **Firebase** | Authentication, Firestore DB, Cloud Functions |
+| **Google Maps Platform** | Places API, Maps SDK, Geocoding |
+| **Mistral AI** | AI pitch generation |
+| **GitHub** | Source control and project management |
 
-## Backend Architecture
+---
 
-The backend should be implemented in Go as a concurrent lead scanning engine.
+## Architecture
 
-### Responsibilities
+### App Architecture (Flutter)
 
-- accept scan requests from Flutter
-- resolve the active `niche_id`
-- query Google Places APIs
-- enforce rate limiting and quotas
-- enrich businesses with detailed metadata
-- score and filter leads
-- cache scan results and photo references
-- stream leads back to the mobile client
-
-### Service Layout
-
-A practical layout could look like:
-
-```text
-backend/
-  cmd/api/
-  internal/config/
-  internal/googleplaces/
-  internal/scanner/
-  internal/niches/
-  internal/scoring/
-  internal/cache/
-  internal/pitch/
-  internal/stream/
-  internal/security/
 ```
-
-### Scan Pipeline
-
-1. Receive a scan request containing:
-   - `niche_id`
-   - coordinates or map bounds
-   - radius
-   - business categories
-   - pagination settings
-2. Resolve the niche rule set.
-3. Run `nearby_search` or `text_search` against Google Places.
-4. Normalize the response into internal place models.
-5. Apply a first-pass niche filter to discard weak candidates quickly.
-6. Fetch `place_details` only for candidates with enough potential.
-7. Compute gap flags and a lead score.
-8. Cache enriched lead data.
-9. Stream qualifying leads to Flutter over gRPC.
-
-### Worker Pool
-
-The scanner should use a worker pool with bounded concurrency so the system can scan aggressively without uncontrolled API spend.
-
-Recommended controls:
-
-- goroutine workers for enrichment
-- context cancellation per scan session
-- token bucket rate limiter for Google calls
-- retry policy with backoff
-- deduplication by `place_id`
-- per-user scan budget enforcement
-
-## Niche Rule Engine
-
-The rule engine should not be tightly coupled to UI labels. It should load gap definitions from structured config or a registry.
-
-### Rule Inputs
-
-- place category/type
-- website presence
-- rating
-- ratings count
-- photo count
-- photo quality signal
-- social links or social metadata presence
-- opening hours completeness
-- price level
-- description completeness where available
-
-### Example Rule Shape
-
-```json
-{
-  "niche_id": "photography",
-  "title": "Photographer",
-  "filters": [
-    { "field": "photos.length", "op": "<", "value": 2 },
-    { "field": "photo_quality.low_res", "op": "==", "value": true }
-  ],
-  "pitch_style": "visual-upgrade",
-  "priority_actions": ["whatsapp", "call", "maps"]
-}
-```
-
-## Lead Scoring
-
-A lead should not only pass the gap filter. It should also be ranked.
-
-Possible score inputs:
-
-- gap severity
-- category fit for the chosen niche
-- presence of phone number
-- existence of WhatsApp-friendly contact route
-- ratings count
-- proximity
-- business activity signals
-- number of missing digital assets
-
-Example high-level formula:
-
-```text
-lead_score =
-  gap_weight +
-  contactability_weight +
-  niche_relevance_weight +
-  proximity_weight +
-  opportunity_weight
-```
-
-## Google Places and Image Handling
-
-Photography and visual-led niches depend heavily on image quality, so image handling should be explicit in the backend design.
-
-### Photo Reference Strategy
-
-The Go service should:
-
-- store `photo_reference` IDs returned by Google Places
-- map those references to `place_id`
-- generate signed or proxied thumbnail URLs where appropriate
-- cache thumbnail metadata for repeated UI loads
-
-### Image Pipeline
-
-1. Fetch `photo_reference` values from place details.
-2. Cache the references with TTL in Redis or PostgreSQL.
-3. Build thumbnail requests for the Flutter app.
-4. Return a lead payload containing hero image and gallery metadata.
-5. Let Flutter display images using cached network loading.
-
-### Thumbnail Policy
-
-- first photo becomes hero image
-- additional photos populate gallery strips and lead cards
-- failed images should degrade gracefully to branded placeholders
-- image fetches should be aggressively cached to keep scrolling smooth
-
-### Flutter Image Layer
-
-The client should use cached image widgets so:
-
-- radar feed scrolling remains smooth
-- detail screens load quickly
-- repeated viewing of the same lead does not refetch everything
-
-## Frontend Architecture
-
-The client is a Flutter mobile app focused on field-ready prospecting.
-
-### Primary Responsibilities
-
-- capture niche and scan preferences
-- render the radar map
-- display live scan progress
-- consume streamed leads
-- present lead details and gap summaries
-- launch contact actions
-- cache local state for session continuity
-
-### Suggested Flutter Structure
-
-```text
 lib/
-  app/
-  core/
-    theme/
-    models/
-    services/
-  features/
-    onboarding/
-    radar/
-    leads/
-    pitch/
-    profile/
+├── main.dart                     # App entry point, Firebase init, notifications
+├── firebase_options.dart         # Firebase platform config
+├── app/
+│   └── app.dart                  # App shell with bottom nav + screen routing
+├── core/
+│   ├── constants/
+│   │   └── api_keys.dart         # API key management
+│   ├── services/
+│   │   ├── app_config_service.dart      # App configuration
+│   │   └── notification_service.dart    # Push notification handling
+│   ├── theme/
+│   │   └── app_theme.dart              # Design system (colors, typography, components)
+│   └── models/                          # Shared domain models
+├── features/
+│   ├── auth/            # Login, signup, auth gate, user profiles
+│   ├── onboarding/      # First-launch experience
+│   ├── setup/           # Niche selection wizard (service, location, categories)
+│   ├── analysis/        # Live scanning engine + progress visualization
+│   ├── radar/           # Map view + lead markers + geofence
+│   ├── leads/           # Curated feed, detail screen, outreach actions
+│   ├── pitch/           # AI chat, pitch generation, template management
+│   ├── stats/           # Dashboard and analytics
+│   └── profile/         # User settings and preferences
 ```
 
-### State and Persistence
+### Backend Scan Pipeline
 
-- `SharedPreferences` for onboarding selections and lightweight settings
-- SQLite for local lead cache, recent scans, and saved pitches
-- in-memory state for live scan sessions
-- optional repository pattern for swapping remote/local data sources cleanly
-
-## Real-Time Communication
-
-The preferred real-time bridge is gRPC streaming.
-
-### Why gRPC
-
-- structured contracts between Go and Flutter
-- low-latency incremental lead delivery
-- easier long-term support for scan events, partial updates, and typed errors
-
-### Stream Events
-
-The backend should be able to emit:
-
-- `scan_started`
-- `scan_progress`
-- `lead_found`
-- `lead_updated`
-- `scan_completed`
-- `scan_failed`
-
-### Fallback
-
-WebSockets can be used during prototyping, but the target production path should remain gRPC.
-
-## Contact Actions
-
-The lead detail view should be optimized for conversion.
-
-### Core Actions
-
-- Copy Number
-- Call
-- WhatsApp Pitch
-- Open in Google Maps
-
-### Mobile Integrations
-
-- `url_launcher` for `tel:` deep links
-- `url_launcher` for `https://wa.me/<number>?text=<encoded_message>`
-- map handoff to Google Maps app or browser
-
-## Dynamic Pitching
-
-The outreach layer should not use one static template. The message should change based on:
-
-- business name
-- niche chosen
-- detected gap
-- city/category context
-- tone preference
-
-### Prompt Inputs
-
-- `business_name`
-- `niche_id`
-- `gap_summary`
-- `business_type`
-- `city`
-- `tone`
-- optional CTA style
-
-### Example Prompt Contract
-
-```text
-Generate a short WhatsApp outreach message for a business owner.
-
-Business name: Mama Titi Kitchen
-Business type: restaurant
-City: Lagos
-User niche: web developer
-Detected gap: no website found
-
-Write a concise, friendly message that points out the opportunity without sounding robotic or spammy. End with a simple soft CTA.
+```
+┌──────────┐    ┌────────────┐    ┌─────────────┐    ┌───────────┐    ┌──────────┐
+│  Client  │    │   API      │    │   Niche     │    │  Google   │    │  Stream  │
+│ Request  │───►│  Gateway   │───►│   Resolver  │───►│  Places   │───►│   Leads  │
+└──────────┘    └────────────┘    └─────────────┘    │   Query   │    │  to App  │
+                                                      └───────────┘    └──────────┘
+                                                           │
+                                                           ▼
+                                                     ┌───────────┐
+                                                     │  Enrich   │
+                                                     │  Details  │
+                                                     └───────────┘
+                                                           │
+                                                           ▼
+                                                     ┌───────────┐
+                                                     │   Score   │
+                                                     │  & Filter │
+                                                     └───────────┘
 ```
 
-### Output Requirements
+1. **Receive Request** — Client sends scan request with location, niche_id, and filters
+2. **Load Niche Rules** — Resolve niche filter definition by `niche_id`
+3. **Query Google Places** — `nearby_search` or `text_search` based on location
+4. **Normalize Results** — Convert raw API responses into internal business models
+5. **Apply First-Pass Gap Filter** — Quick elimination of non-matching businesses
+6. **Fetch Details** — `place_details` for strong candidates (phone, photos, hours, ratings)
+7. **Compute Score** — Lead score based on gap severity, rating, review count, and distance
+8. **Cache Results** — Store enriched data with configurable TTL
+9. **Stream to Client** — Real-time lead delivery over gRPC stream
 
-- short enough for WhatsApp
-- personalized
-- niche-specific
-- avoids exaggerated claims
-- makes the gap obvious
-- closes with a low-friction CTA
+---
 
-## Data and Caching Strategy
+## Design System
 
-The product requirement calls for PostgreSQL and Redis, and that is a sensible split.
+The UI follows an **Industrial Tech** design language — tactical, premium, dark, and high-performance.
 
-### PostgreSQL
+### Color Palette
 
-Use PostgreSQL for:
+| Token | Value | Usage |
+|---|---|---|
+| Background | `#0D0D0D` | Primary background |
+| Accent | `#00E5FF` | Active states, scan pulses, highlights |
+| Borders | `#FFFFFF1A` | Subtle card and container borders |
+| Primary Text | `#F5F7FA` | Headlines and primary copy |
+| Secondary Text | `#A7B0BE` | Labels, hints, supporting text |
 
-- durable scan history
-- niche definitions
-- saved leads
-- pitch logs
-- user settings
-- analytics aggregates
+### Visual Language
 
-### Redis
+- **Glassmorphism** — Frosted-glass effect for lead cards and bottom sheets
+- **Blur** — ~15px backdrop blur for depth and layering
+- **Glow Effects** — Cyan neon glow for active scan states and markers
+- **Dark Maps** — High-contrast map styling for readability
+- **Motion Design** — Circular scan pulses, smooth transitions, animated markers
 
-Use Redis for:
+---
 
-- hot lead cache
-- scan session state
-- rate limiting counters
-- cached Google Places payloads
-- photo reference TTL caching
+## Getting Started
 
-### Local Device Cache
+### Prerequisites
 
-Use SQLite in the Flutter app for:
+- **Flutter SDK** 3.9+ ([install guide](https://docs.flutter.dev/get-started/install))
+- **Dart SDK** 3.9+
+- **Go** 1.22+ (for backend development)
+- **Firebase Project** with Authentication and Firestore enabled
+- **Google Maps API Key** with Places API, Maps SDK enabled
+- **Mistral AI API Key** (for AI pitch generation, optional)
 
-- recently viewed leads
-- saved prospects
-- offline-friendly lead reopening
-- pending pitch drafts
+### Installation
 
-## Security and Cost Controls
+```bash
+# Clone the repository
+git clone https://github.com/Adebayodamilola20/founders_scout.git
+cd founders_scout
 
-### Google Maps API Key
+# Install Flutter dependencies
+flutter pub get
 
-- restrict keys by package name and SHA-1 on Android
-- use platform-specific restrictions for iOS
-- never hardcode unrestricted production keys in the client
+# Run on device/emulator
+flutter run
+```
 
-### Rate Limiting
+### Configuration
 
-The Go backend should use a token bucket limiter to:
+1. **Copy the environment template:**
+   ```bash
+   cp .env.example .env
+   ```
 
-- protect costs
-- avoid runaway scans
-- throttle concurrent workers
-- smooth request bursts
+2. **Add your Google Maps API key to `.env`:**
+   ```
+   GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+   ```
 
-### Data Privacy
+3. **Firebase Setup:**
+   - The project already includes `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
+   - If setting up from scratch, generate these from the Firebase Console
+   - Enable **Email/Password** and **Google Sign-In** in Firebase Authentication
 
-- avoid storing unnecessary user data on the server
-- process leads in-memory where possible during live scan
-- store only what is necessary for product continuity and caching
-- keep sensitive contact workflows auditable
+4. **Mistral AI (Optional):**
+   - Add your Mistral API key in the app configuration or environment
+   - Required for AI-powered pitch generation
 
-## Suggested MVP Scope
+5. **Platform-Specific Setup:**
 
-The current repo is still an early Flutter scaffold, so the first meaningful milestone should stay narrow.
+   **Android:**
+   - The Gradle configuration reads the Maps API key from `.env` automatically
+   - Update `android/app/build.gradle.kts` if you need custom build variants
 
-### MVP Deliverables
+   **iOS:**
+   - The Maps API key is read from `.env` through xcconfig configuration
+   - Ensure `Info.plist` resolves `GMSApiKey` correctly
 
-1. Niche onboarding with persistence
-2. Radar screen with industrial-tech theme
-3. gRPC scan session start and progress stream
-4. Lead feed with gap badges
-5. Lead detail with hero image and CTA actions
-6. WhatsApp pitch generation
-7. Local cache for recent leads
+---
 
-### Phase 2
+## Project Structure
 
-- auth
-- saved lists
-- dashboard and analytics
-- smarter scoring
-- richer social presence audits
-- subscription/paywall
+```
+founders_scout/
+├── android/                  # Android platform files
+├── ios/                      # iOS platform files
+├── lib/                      # Flutter/Dart source code
+│   ├── main.dart             # Entry point
+│   ├── firebase_options.dart
+│   ├── app/
+│   │   └── app.dart          # App shell with navigation
+│   ├── core/
+│   │   ├── constants/
+│   │   ├── services/
+│   │   └── theme/
+│   └── features/
+│       ├── auth/
+│       ├── onboarding/
+│       ├── setup/
+│       ├── analysis/
+│       ├── radar/
+│       ├── leads/
+│       ├── pitch/
+│       ├── stats/
+│       └── profile/
+├── backend/                  # Go backend source
+│   ├── cmd/api/main.go       # API entry point
+│   ├── go.mod
+│   └── internal/
+│       ├── cache/            # Redis caching layer
+│       ├── config/           # Backend configuration
+│       ├── googleplaces/     # Google Places API client
+│       ├── niches/           # Niche rule definitions
+│       ├── pitch/            # Server-side pitch logic
+│       ├── scanner/          # Scan orchestration
+│       ├── scoring/          # Lead scoring engine
+│       ├── security/         # Auth and rate limiting
+│       └── stream/           # gRPC streaming
+├── assets/
+│   ├── branding/             # App logos and brand assets
+│   ├── images/               # Screenshots and marketing images
+│   └── lottie/               # Lottie animation files
+├── docs/
+│   └── PRD.md                # Full product requirements document
+├── test/                     # Unit and widget tests
+├── web/                      # Web platform files
+├── macos/                    # macOS platform files
+├── linux/                    # Linux platform files
+├── windows/                  # Windows platform files
+├── pubspec.yaml              # Flutter dependencies
+└── .env.example              # Environment variable template
+```
 
-### Phase 3
+---
 
-- collaborative team workspaces
-- AI-assisted follow-up flows
-- automated scheduled scans
-- CRM export
-- multi-channel outreach orchestration
+## Roadmap
 
-## Current Repo State
+### ✅ Complete
+- [x] Niche onboarding & setup wizard
+- [x] Radar map view with Google Maps
+- [x] Google Places API scanning engine
+- [x] Curated lead feed with gap badges
+- [x] Lead detail screen with action bar
+- [x] AI pitch generator (Mistral integration)
+- [x] Firebase authentication
+- [x] Firestore user profile persistence
+- [x] Stats dashboard
+- [x] Local notifications & reminders
+- [x] Cross-platform (Android, iOS, Web, macOS, Linux, Windows)
+- [x] Lottie scan animations
+- [x] Geofence support
 
-This repository currently contains the default Flutter project scaffold and should be treated as the starting shell, not the finished product architecture.
+### 🚧 In Progress
+- [ ] Go backend deployment with gRPC streaming
+- [ ] Real-time lead streaming to Flutter
+- [ ] Advanced lead scoring with machine learning
+- [ ] Lead outreach tracking & CRM integration
+- [ ] Saved lead lists / collections
+- [ ] Pitch history management
+- [ ] Email outreach support (via Resend)
 
-Right now:
+### 📋 Planned
+- [ ] Google Sign-In
+- [ ] Subscription & upgrade flow
+- [ ] Email reports & Excel export
+- [ ] Team/agency account support
+- [ ] Multiple scan profiles
+- [ ] Advanced filter presets
+- [ ] Lead alerts & push notifications for new opportunities
+- [ ] API marketplace for third-party integrations
 
-- the Flutter app exists
-- the product README is now defined
-- the Go backend is still to be built
-- the niche engine, gRPC contracts, caching layers, and production UI still need implementation
+---
 
-## Build Direction
+## License
 
-The intended stack is:
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-- Flutter for the mobile client
-- Go for the scanning and enrichment backend
-- gRPC for real-time lead streaming
-- PostgreSQL and Redis for server-side persistence and caching
-- SQLite for local mobile caching
-- Google Places / Maps APIs for business discovery and map rendering
+---
 
-## Next Implementation Steps
+## Links
 
-1. Replace the demo Flutter counter app with app routing and theme setup.
-2. Implement the industrial-tech design system in Flutter.
-3. Create onboarding with niche selection and `SharedPreferences`.
-4. Define protobuf contracts for scan requests, progress events, and lead payloads.
-5. Build the Go scan engine with rate-limited Google Places access.
-6. Add lead scoring and niche registry support.
-7. Implement radar map, live scan UI, and lead feed.
-8. Add lead detail actions for call, WhatsApp, copy, and maps.
-9. Add AI pitch generation endpoint and client flow.
-10. Add PostgreSQL, Redis, and SQLite caching layers where each is appropriate.
+- **GitHub Repository**: [github.com/Adebayodamilola20/founders_scout](https://github.com/Adebayodamilola20/founders_scout)
+- **Product Requirements Document**: [docs/PRD.md](docs/PRD.md)
+- **Author**: Adebayo Stephen Oluwadamilola
 
-## Summary
+---
 
-Founders Scout should become a niche-adaptive lead intelligence system for freelancers and small agencies. The product should not be limited to finding businesses without websites. Its strength is the ability to transform one scanning engine into many specialized opportunity detectors, each matched to the service the user actually sells.
-
-That is the foundation this repository should now build toward.
+*Founders Scout — Turn every map into a sales opportunity.*
