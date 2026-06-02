@@ -1,0 +1,809 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f5f5f7;font-family:'Inter',sans-serif;padding:32px 24px 60px}
+.page-header{margin-bottom:28px}
+.page-header h1{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.page-header p{font-size:13px;color:#888;font-weight:400}
+.tabs{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid #e0e0e0;color:#666;background:#fff;transition:all .15s}
+.tab.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:24px}
+.screen-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.phone-frame{width:200px;height:432px;background:#1a1a1a;border-radius:38px;padding:3px;box-shadow:0 20px 60px rgba(0,0,0,0.18),0 0 0 1px rgba(0,0,0,0.08)}
+.phone-inner{width:100%;height:100%;border-radius:36px;overflow:hidden;position:relative;background:#fff}
+.screen-label{font-size:11px;font-weight:600;color:#1a1a1a;text-align:center}
+.screen-sub{font-size:10px;color:#999;text-align:center}
+</style>
+
+<div class="page-header">
+  <h1>Founders Scout</h1>
+  <p>25 screens · App Store ready · Human UI</p>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="show('all',this)">All 25</div>
+  <div class="tab" onclick="show('onboard',this)">Onboarding</div>
+  <div class="tab" onclick="show('radar',this)">Radar</div>
+  <div class="tab" onclick="show('leads',this)">Leads</div>
+  <div class="tab" onclick="show('pitch',this)">Pitch AI</div>
+  <div class="tab" onclick="show('profile',this)">Profile</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const screens=[
+  {cat:'onboard',num:'01',name:'Welcome',sub:'Splash & entry',html:splash},
+  {cat:'onboard',num:'02',name:'Onboard 1',sub:'Find gaps',html:ob1},
+  {cat:'onboard',num:'03',name:'Onboard 2',sub:'Score leads',html:ob2},
+  {cat:'onboard',num:'04',name:'Onboard 3',sub:'AI pitches',html:ob3},
+  {cat:'onboard',num:'05',name:'Sign Up',sub:'Create account',html:signup},
+  {cat:'onboard',num:'06',name:'Log In',sub:'Welcome back',html:login},
+  {cat:'radar',num:'07',name:'Radar Map',sub:'Main map view',html:radarMap},
+  {cat:'radar',num:'08',name:'Filters',sub:'Refine search',html:filterSheet},
+  {cat:'radar',num:'09',name:'Scanning',sub:'Live progress',html:scanning},
+  {cat:'radar',num:'10',name:'Pin Preview',sub:'Quick look',html:pinPreview},
+  {cat:'leads',num:'11',name:'Lead Feed',sub:'All results',html:leadFeed},
+  {cat:'leads',num:'12',name:'Lead Detail',sub:'Full profile',html:leadDetail},
+  {cat:'leads',num:'13',name:'Gap Report',sub:'Digital audit',html:gapReport},
+  {cat:'leads',num:'14',name:'Saved Lists',sub:'Collections',html:savedLists},
+  {cat:'leads',num:'15',name:'Search',sub:'Find leads',html:searchScreen},
+  {cat:'pitch',num:'16',name:'Pitch Home',sub:'Studio hub',html:pitchHome},
+  {cat:'pitch',num:'17',name:'Generating',sub:'AI writing',html:pitchGen},
+  {cat:'pitch',num:'18',name:'Pitch Ready',sub:'Email done',html:pitchReady},
+  {cat:'pitch',num:'19',name:'Edit Pitch',sub:'Customise',html:pitchEdit},
+  {cat:'pitch',num:'20',name:'AI Chat',sub:'Ask anything',html:aiChat},
+  {cat:'profile',num:'21',name:'Dashboard',sub:'Your stats',html:dashboard},
+  {cat:'profile',num:'22',name:'Settings',sub:'Preferences',html:settings},
+  {cat:'profile',num:'23',name:'Alerts',sub:'Notifications',html:alerts},
+  {cat:'profile',num:'24',name:'Go Pro',sub:'Upgrade plan',html:goPro},
+  {cat:'profile',num:'25',name:'History',sub:'Past pitches',html:history},
+];
+
+function show(cat,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  const list=cat==='all'?screens:screens.filter(s=>s.cat===cat);
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  list.forEach(s=>{
+    const w=document.createElement('div');
+    w.className='screen-wrap';
+    w.innerHTML=`<div class="phone-frame"><div class="phone-inner">${s.html()}</div></div><div class="screen-label">${s.num} · ${s.name}</div><div class="screen-sub">${s.sub}</div>`;
+    g.appendChild(w);
+  });
+}
+
+/* ── shared micro-components ── */
+function sb(light=false){
+  const c=light?'#1a1a1a':'#fff';
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 4px;font-size:10px;font-weight:600;color:${c}"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><span style="font-size:9px">●●●</span><span>WiFi</span><span>⬛</span></div></div>`;
+}
+function nb(active){
+  const ic=['⊙','≡','✦','◎'];const lb=['Radar','Leads','Pitch','Me'];
+  return `<div style="position:absolute;bottom:0;left:0;right:0;height:58px;background:#fff;border-top:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-around;padding:0 4px 4px">
+    ${ic.map((i,n)=>`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:10px;${n===active?'background:#f5f5f7':''}">
+      <span style="font-size:17px;${n===active?'color:#1a1a1a':'color:#c0c0c0'}">${i}</span>
+      <span style="font-size:8px;font-weight:${n===active?'600':'400'};color:${n===active?'#1a1a1a':'#c0c0c0'}">${lb[n]}</span>
+    </div>`).join('')}
+  </div>`;
+}
+function pill(text,type='gray'){
+  const map={gray:'background:#f2f2f2;color:#555',red:'background:#fff1f2;color:#e11d48',amber:'background:#fffbeb;color:#d97706',green:'background:#f0fdf4;color:#16a34a',blue:'background:#eff6ff;color:#2563eb'};
+  return `<span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:500;${map[type]||map.gray}">${text}</span>`;
+}
+function card(content,style=''){
+  return `<div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px;${style}">${content}</div>`;
+}
+function avatar(text,color='#e8f5e9',tc='#2e7d32'){
+  return `<div style="width:38px;height:38px;border-radius:12px;background:${color};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${tc};flex-shrink:0">${text}</div>`;
+}
+function scoreRing(n,color='#16a34a'){
+  const pct=n;const r=18;const circ=2*Math.PI*r;const dash=circ*(pct/100);
+  return `<div style="position:relative;width:44px;height:44px;flex-shrink:0">
+    <svg width="44" height="44" style="transform:rotate(-90deg)"><circle cx="22" cy="22" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="3"/><circle cx="22" cy="22" r="${r}" fill="none" stroke="${color}" stroke-width="3" stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/></svg>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:700;color:#1a1a1a;line-height:1">${n}</span><span style="font-size:7px;color:#999;line-height:1">SCR</span></div>
+  </div>`;
+}
+function inputField(label,placeholder,val=''){
+  return `<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:#1a1a1a;margin-bottom:5px">${label}</div><div style="height:42px;background:#f7f7f8;border-radius:12px;border:1.5px solid ${val?'#1a1a1a':'#ebebeb'};display:flex;align-items:center;padding:0 14px;font-size:12px;color:${val?'#1a1a1a':'#bbb'}">${val||placeholder}</div></div>`;
+}
+function bigBtn(text,bg='#1a1a1a',tc='#fff'){
+  return `<div style="height:48px;background:${bg};border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:${tc};margin-bottom:10px">${text}</div>`;
+}
+function ghostBtn(text){
+  return `<div style="height:44px;border-radius:14px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#555;margin-bottom:8px">${text}</div>`;
+}
+
+/* ── screen renderers ── */
+function splash(){return `<div style="width:100%;height:100%;background:#fff;position:relative">
+  ${sb(true)}
+  <div style="position:absolute;top:0;left:0;right:0;height:260px;background:linear-gradient(180deg,#0f0f0f 0%,#1a1a2e 100%);overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 30% 40%,rgba(255,255,255,0.04) 1px,transparent 1px),radial-gradient(circle at 70% 60%,rgba(255,255,255,0.04) 1px,transparent 1px);background-size:24px 24px"></div>
+    <div style="position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 18px 0">
+      <span style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.5)">9:41</span>
+      <span style="font-size:9px;color:rgba(255,255,255,0.4)">●●● WiFi ⬛</span>
+    </div>
+    <div style="position:absolute;bottom:28px;left:0;right:0;padding:0 20px">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px 5px 6px;margin-bottom:10px">
+        <div style="width:20px;height:20px;border-radius:6px;background:#4ade80;display:flex;align-items:center;justify-content:center;font-size:11px">⊙</div>
+        <span style="font-size:10px;font-weight:600;color:#fff">Founders Scout</span>
+      </div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:24px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:6px">Find clients<br>before anyone<br><span style="color:#4ade80">else does.</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;top:260px;left:0;right:0;bottom:0;padding:20px 18px 16px">
+    <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:20px">We scan Google Maps and surface businesses with no website, no reviews, and no socials — your next paying clients.</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div style="flex:1;background:#f7f7f8;border-radius:14px;padding:12px;text-align:center">
+        <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">2.4k</div>
+        <div style="font-size:10px;color:#999;margin-top:1px">Leads found</div>
+      </div>
+      <div style="flex:1;background:#f7f7f8;border-radius:14px;padding:12px;text-align:center">
+        <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">38%</div>
+        <div style="font-size:10px;color:#999;margin-top:1px">Reply rate</div>
+      </div>
+    </div>
+    ${bigBtn('Get started for free')}
+    ${ghostBtn('I already have an account')}
+    <div style="text-align:center;font-size:10px;color:#ccc">By continuing you agree to our Terms</div>
+  </div>
+</div>`;}
+
+function ob1(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column">
+  <div style="height:200px;background:#0f0f0f;position:relative;overflow:hidden;flex-shrink:0">
+    <div style="position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 18px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.4)"><span>9:41</span><span>●●● WiFi ⬛</span></div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+      <div style="position:relative">
+        <div style="width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,0.08);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+        <div style="width:84px;height:84px;border-radius:50%;border:1px solid rgba(255,255,255,0.12);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(74,222,128,0.15);border:1.5px solid #4ade80;display:flex;align-items:center;justify-content:center;position:relative;z-index:2"><span style="font-size:18px">⊙</span></div>
+        ${[['top:-30px;left:10px','#ef4444'],['top:10px;right:-28px','#ef4444'],['bottom:-24px;left:8px','#f59e0b']].map(([pos,c])=>`<div style="position:absolute;${pos};width:26px;height:26px;background:#fff;border-radius:8px;border:1px solid #f0f0f0;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15)"><div style="width:8px;height:8px;border-radius:2px;background:${c}"></div></div>`).join('')}
+      </div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,#fff)"></div>
+  </div>
+  <div style="flex:1;padding:16px 18px 20px;display:flex;flex-direction:column">
+    <div style="display:flex;gap:6px;margin-bottom:18px">${[1,2,3].map(i=>`<div style="height:4px;border-radius:2px;flex:1;background:${i===1?'#1a1a1a':'#e8e8e8'}"></div>`).join('')}</div>
+    <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;line-height:1.2;color:#1a1a1a;margin-bottom:8px">Scan your city<br>for hidden clients</div>
+    <div style="font-size:12px;color:#888;line-height:1.65;margin-bottom:20px">We query Google Maps in any radius and find businesses that are listed but completely absent online. No website. No reviews. No presence.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      ${[['🗺️','Set a radius around you','500m to 10km'],['🔍','We query Google Places API','Live, real-time scan'],['📍','Leads appear on your map','Colour-coded by value']].map(([e,t,s])=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 12px;background:#f7f7f8;border-radius:12px"><span style="font-size:16px">${e}</span><div><div style="font-size:11px;font-weight:600;color:#1a1a1a">${t}</div><div style="font-size:10px;color:#999">${s}</div></div></div>`).join('')}
+    </div>
+    ${bigBtn('Next →')}
+  </div>
+</div>`;}
+
+function ob2(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;padding:18px 18px 20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;gap:6px">${[1,2,3].map(i=>`<div style="height:4px;border-radius:2px;width:${i===2?'24px':'16px'};background:${i===2?'#1a1a1a':'#e8e8e8'}"></div>`).join('')}</div>
+    <span style="font-size:11px;color:#ccc">Skip</span>
+  </div>
+  <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;line-height:1.2;color:#1a1a1a;margin-bottom:6px">We score every<br>digital gap</div>
+  <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:14px">Each business gets a Scout Score. The higher it is, the more they need you.</div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    ${[
+      ['Mama Titi Kitchen','Lagos Island · Restaurant',94,'#ef4444',['No website','0 reviews','No IG']],
+      ['Balogun Tailors','Balogun St · Fashion',82,'#f59e0b',['No website','No socials']],
+      ['Adunni Fabrics','Yaba · Textiles',61,'#22c55e',['Low reviews']],
+    ].map(([name,loc,score,sc,gaps])=>`<div style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center">
+      ${scoreRing(score,sc)}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+        <div style="font-size:10px;color:#999;margin-bottom:5px">${loc}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${gaps.map(g=>`<span style="font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;background:#fff1f2;color:#e11d48">${g}</span>`).join('')}</div>
+      </div>
+    </div>`).join('')}
+  </div>
+  ${bigBtn('Next →')}
+</div>`;}
+
+function ob3(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;padding:18px 18px 20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div style="display:flex;gap:6px">${[1,2,3].map(i=>`<div style="height:4px;border-radius:2px;width:${i===3?'24px':'16px'};background:${i===3?'#1a1a1a':'#e8e8e8'}"></div>`).join('')}</div>
+    <span style="font-size:11px;color:#ccc">Skip</span>
+  </div>
+  <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;line-height:1.2;color:#1a1a1a;margin-bottom:6px">AI writes your<br>pitch in 10 sec</div>
+  <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:14px">Tap any lead and get a personalised cold email, WhatsApp opener, or LinkedIn message — ready to send.</div>
+  <div style="background:#f7f7f8;border-radius:16px;padding:14px;margin-bottom:16px;flex:1">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:28px;height:28px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">✦</div>
+      <div><div style="font-size:11px;font-weight:600">Scout AI</div><div style="font-size:9px;color:#999">Generating pitch...</div></div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:12px;border:1px solid #f0f0f0;margin-bottom:8px">
+      <div style="font-size:10px;font-weight:600;color:#999;margin-bottom:4px">SUBJECT LINE</div>
+      <div style="font-size:11px;font-weight:600;color:#1a1a1a;margin-bottom:8px">Quick idea for Mama Titi Kitchen 👋</div>
+      <div style="font-size:10px;color:#666;line-height:1.7">Hi, I found your restaurant on Google Maps — great reviews on Zomato! I noticed you don't have a website yet. I help Lagos restaurants get found online and turn foot traffic into bookings...</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      ${['Cold Email','WhatsApp','LinkedIn'].map((t,i)=>`<div style="flex:1;text-align:center;padding:7px 4px;border-radius:10px;font-size:10px;font-weight:500;${i===0?'background:#1a1a1a;color:#fff':'background:#fff;color:#888;border:1px solid #eee'}">${t}</div>`).join('')}
+    </div>
+  </div>
+  ${bigBtn('Start scouting for free')}
+  ${ghostBtn('Sign in')}
+</div>`;}
+
+function signup(){return `<div style="width:100%;height:100%;background:#fff;padding:18px 18px 20px">
+  ${sb(true)}
+  <div style="margin-top:6px;margin-bottom:20px">
+    <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:3px">Create account</div>
+    <div style="font-size:12px;color:#999">Start finding leads today</div>
+  </div>
+  ${inputField('Full name','Your full name')}
+  ${inputField('Email','you@email.com')}
+  ${inputField('Password','At least 8 characters')}
+  ${inputField('Your city','Lagos, Nigeria','Lagos, Nigeria')}
+  <div style="margin-bottom:16px">
+    ${bigBtn('Create account →')}
+    <div style="display:flex;align-items:center;gap:8px;margin:12px 0"><div style="flex:1;height:1px;background:#f0f0f0"></div><span style="font-size:11px;color:#ccc">or</span><div style="flex:1;height:1px;background:#f0f0f0"></div></div>
+    <div style="height:44px;border-radius:14px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:500;color:#555"><span>G</span> Continue with Google</div>
+  </div>
+  <div style="text-align:center;font-size:10px;color:#bbb">Already have an account? <span style="color:#1a1a1a;font-weight:600">Sign in</span></div>
+</div>`;}
+
+function login(){return `<div style="width:100%;height:100%;background:#fff;padding:18px 18px 20px">
+  ${sb(true)}
+  <div style="margin-top:6px;margin-bottom:20px">
+    <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:#1a1a1a;margin-bottom:3px">Welcome back 👋</div>
+    <div style="font-size:12px;color:#999">Your leads are waiting</div>
+  </div>
+  ${inputField('Email','you@email.com','chioma@studio.ng')}
+  ${inputField('Password','••••••••')}
+  <div style="display:flex;justify-content:flex-end;margin:-6px 0 16px"><span style="font-size:11px;color:#1a1a1a;font-weight:500">Forgot password?</span></div>
+  ${bigBtn('Sign in →')}
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0"><div style="flex:1;height:1px;background:#f0f0f0"></div><span style="font-size:11px;color:#ccc">or</span><div style="flex:1;height:1px;background:#f0f0f0"></div></div>
+  ${ghostBtn('G  Continue with Google')}
+  ${ghostBtn(' Continue with Apple')}
+  <div style="text-align:center;font-size:10px;color:#bbb;margin-top:6px">New here? <span style="color:#1a1a1a;font-weight:600">Create account</span></div>
+</div>`;}
+
+function radarMap(){return `<div style="width:100%;height:100%;position:relative;background:#e8ead0;overflow:hidden">
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,#dde2c6 0%,#e8ead0 40%,#d4d9b8 100%)"></div>
+  <div style="position:absolute;inset:0">
+    <div style="position:absolute;top:45%;left:10%;width:60%;height:2px;background:rgba(255,255,255,0.7);border-radius:1px"></div>
+    <div style="position:absolute;top:35%;left:5%;width:40%;height:2px;background:rgba(255,255,255,0.5);border-radius:1px;transform:rotate(8deg)"></div>
+    <div style="position:absolute;top:55%;left:20%;width:50%;height:2px;background:rgba(255,255,255,0.7);border-radius:1px"></div>
+    <div style="position:absolute;top:65%;left:30%;width:35%;height:2px;background:rgba(255,255,255,0.6);border-radius:1px;transform:rotate(-3deg)"></div>
+    ${['top:25%;left:8%','top:40%;left:35%','top:28%;right:10%','top:55%;right:15%','bottom:30%;left:12%','bottom:20%;right:20%','top:35%;left:60%'].map((p,i)=>`<div style="position:absolute;${p};width:${[36,42,38,40,36,44,38][i]}px;height:${[28,32,30,34,28,34,30][i]}px;background:rgba(255,255,255,0.6);border-radius:4px"></div>`).join('')}
+  </div>
+  <div style="position:absolute;top:0;left:0;right:0">${sb()}</div>
+  <div style="position:absolute;top:36px;left:12px;right:12px;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);display:flex;align-items:center;gap:8px">
+    <span style="font-size:14px">🔍</span>
+    <span style="font-size:12px;color:#888;flex:1">Lagos Island, Nigeria</span>
+    <div style="width:30px;height:30px;background:#f7f7f8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">≡</div>
+  </div>
+  <div style="position:absolute;top:48%;left:50%;transform:translate(-50%,-50%)">
+    <div style="width:80px;height:80px;border-radius:50%;border:1px solid rgba(99,102,241,0.2);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div style="width:140px;height:140px;border-radius:50%;border:1px solid rgba(99,102,241,0.12);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+    <div style="width:16px;height:16px;border-radius:50%;background:#6366f1;border:3px solid #fff;box-shadow:0 2px 8px rgba(99,102,241,0.5)"></div>
+  </div>
+  ${[['top:24%;left:22%','#ef4444','H','Mama Titi'],['top:40%;right:18%','#ef4444','H','Balogun T.'],['top:55%;left:30%','#f59e0b','M','Grace Hub'],['bottom:32%;right:25%','#22c55e','L','Femi Tech'],['top:30%;left:55%','#f59e0b','M','Adunni F.']].map(([pos,c,t,name])=>`
+    <div style="position:absolute;${pos};display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div style="background:#fff;border-radius:6px;padding:2px 6px;font-size:8px;font-weight:600;color:#1a1a1a;box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap">${name}</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;box-shadow:0 4px 12px ${c}66">${t}</div>
+    </div>`).join('')}
+  <div style="position:absolute;bottom:66px;left:12px;right:12px;background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,0.12)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a">24 leads found</div>
+      <div style="font-size:11px;color:#6366f1;font-weight:500">See all →</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      ${[['🔴 High value','8','#fff1f2','#ef4444'],['🟡 Medium','11','#fffbeb','#d97706'],['🟢 Low gap','5','#f0fdf4','#16a34a']].map(([l,n,bg,tc])=>`<div style="flex:1;background:${bg};border-radius:10px;padding:7px;text-align:center"><div style="font-size:14px;font-weight:700;color:${tc}">${n}</div><div style="font-size:9px;color:#888;margin-top:1px">${l}</div></div>`).join('')}
+    </div>
+  </div>
+  ${nb(0)}
+</div>`;}
+
+function filterSheet(){return `<div style="width:100%;height:100%;background:rgba(0,0,0,0.4);position:relative">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:0 18px 24px">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 16px"></div>
+    <div style="font-family:'Bricolage Grotesque';font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:16px">Filter leads</div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">SCAN RADIUS</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      ${['500m','1km','2km','5km'].map((r,i)=>`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:12px;font-size:11px;font-weight:500;${i===1?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#555'}">${r}</div>`).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">DIGITAL GAP</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+      ${['No Website','0 Reviews','No Socials','No Phone','No WhatsApp'].map((t,i)=>`<div style="padding:7px 12px;border-radius:20px;font-size:11px;font-weight:500;${i<2?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#555'}">${t}</div>`).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">CATEGORY</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">
+      ${['Restaurant','Fashion','Services','Health','Retail'].map((t,i)=>`<div style="padding:7px 12px;border-radius:20px;font-size:11px;font-weight:500;${i===0?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#555'}">${t}</div>`).join('')}
+    </div>
+    ${bigBtn('Apply filters')}
+  </div>
+</div>`;}
+
+function scanning(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column;align-items:center;padding:18px">
+  ${sb(true)}
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;width:100%">
+    <div style="position:relative;width:150px;height:150px;margin-bottom:24px">
+      ${[150,114,78,42].map((s,i)=>`<div style="position:absolute;top:50%;left:50%;width:${s}px;height:${s}px;border-radius:50%;border:${i===2?'2px':'1px'} solid ${i===2?'#6366f1':'rgba(99,102,241,0.15)'};transform:translate(-50%,-50%)"></div>`).join('')}
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:#6366f1;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 20px rgba(99,102,241,0.4);display:flex;align-items:center;justify-content:center;font-size:16px">⊙</div>
+      <div style="position:absolute;top:18%;left:10%;width:22px;height:22px;background:#ef4444;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">H</div>
+      <div style="position:absolute;bottom:15%;right:10%;width:22px;height:22px;background:#f59e0b;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">M</div>
+    </div>
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a;text-align:center;margin-bottom:4px">Scanning Lagos Island</div>
+    <div style="font-size:12px;color:#999;margin-bottom:24px;text-align:center">Checking 247 businesses nearby</div>
+    <div style="width:100%;background:#f7f7f8;border-radius:14px;padding:14px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:#999">Progress</span>
+        <span style="font-size:11px;font-weight:600;color:#1a1a1a">68% · 168/247</span>
+      </div>
+      <div style="height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="width:68%;height:100%;background:#6366f1;border-radius:3px"></div></div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:11px;color:#999">Leads found</span>
+        <span style="font-family:'Bricolage Grotesque';font-size:16px;font-weight:800;color:#1a1a1a">16</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;width:100%">
+      ${[['🔴','High','4'],['🟡','Med','8'],['🟢','Low','4']].map(([e,l,n])=>`<div style="flex:1;background:#f7f7f8;border-radius:12px;padding:10px;text-align:center"><div style="font-size:16px">${e}</div><div style="font-size:14px;font-weight:700;color:#1a1a1a">${n}</div><div style="font-size:9px;color:#999">${l}</div></div>`).join('')}
+    </div>
+  </div>
+</div>`;}
+
+function pinPreview(){return `<div style="width:100%;height:100%;background:rgba(0,0,0,0.3);position:relative">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:0 18px 20px">
+    <div style="width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 14px"></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px">
+      <div style="width:48px;height:48px;background:#fef3c7;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍲</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:2px">Mama Titi Kitchen</div>
+        <div style="font-size:11px;color:#999;margin-bottom:8px">37 Balogun St · Lagos Island</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${pill('No website','red')}${pill('0 reviews','red')}${pill('No IG','amber')}
+        </div>
+      </div>
+      ${scoreRing(94,'#ef4444')}
+    </div>
+    <div style="display:flex;gap-6px;background:#f7f7f8;border-radius:14px;padding:12px;margin-bottom:14px">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="flex:1"><div style="font-size:10px;color:#999;margin-bottom:2px">Scout says</div><div style="font-size:11px;color:#555;line-height:1.5">"No website + 0 reviews. High urgency. This business is completely invisible online."</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;height:44px;background:#1a1a1a;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff">✦ Generate pitch</div>
+      <div style="height:44px;width:60px;border-radius:12px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:13px">🔖</div>
+    </div>
+  </div>
+</div>`;}
+
+function leadFeed(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 10px;background:#f7f7f8">
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:10px">Lead Feed</div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+      ${['All 24','High Value','Saved','Pitched'].map((t,i)=>`<div style="white-space:nowrap;padding:7px 14px;border-radius:20px;font-size:11px;font-weight:500;flex-shrink:0;${i===0?'background:#1a1a1a;color:#fff':'background:#fff;color:#555;border:1px solid #e8e8e8'}">${t}</div>`).join('')}
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 12px 60px;display:flex;flex-direction:column;gap:8px">
+    ${[
+      ['Mama Titi Kitchen','37 Balogun St · Restaurant',94,'#ef4444','🍲','#fef3c7',['No website','0 reviews','No IG']],
+      ['Balogun Tailors','12 Tinubu · Fashion',82,'#f59e0b','👗','#fdf4ff',['No website','No socials']],
+      ['Grace Beauty Hub','Surulere · Beauty',76,'#f59e0b','💅','#fdf4ff',['No website','3 reviews']],
+      ['Femi Tech Hub','Ikeja · Services',61,'#22c55e','🔧','#f0fdf4',['Low reviews']],
+    ].map(([name,loc,sc,clr,em,bg,gaps])=>`<div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="width:40px;height:40px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${em}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:600;color:#1a1a1a">${name}</div>
+            ${scoreRing(sc,clr)}
+          </div>
+          <div style="font-size:10px;color:#999;margin-bottom:6px">${loc}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">${gaps.map(g=>`<span style="font-size:9px;font-weight:500;padding:2px 7px;border-radius:10px;background:#fff1f2;color:#e11d48">${g}</span>`).join('')}</div>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>
+  ${nb(1)}
+</div>`;}
+
+function leadDetail(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 0;display:flex;align-items:center;gap:8px;margin-bottom:12px">
+    <div style="width:28px;height:28px;background:#fff;border-radius:8px;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px">←</div>
+    <span style="font-size:12px;font-weight:500;color:#999">Lead profile</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 12px 60px">
+    <div style="background:#fff;border-radius:18px;border:1px solid #f0f0f0;padding:16px;margin-bottom:10px">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <div style="width:52px;height:52px;background:#fef3c7;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px">🍲</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1a1a1a">Mama Titi Kitchen</div>
+          <div style="font-size:11px;color:#999;margin-top:2px">37 Balogun St · Lagos Island</div>
+          <div style="display:flex;gap:4px;margin-top:6px">${pill('Restaurant','gray')}${pill('Open now','green')}</div>
+        </div>
+      </div>
+      <div style="height:1px;background:#f5f5f5;margin-bottom:12px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${[['Scout Score','94 / 100'],['Google Reviews','0 total'],['Website','None'],['Instagram','Not linked']].map(([l,v])=>`<div style="background:#f7f7f8;border-radius:12px;padding:10px"><div style="font-size:10px;color:#999;margin-bottom:3px">${l}</div><div style="font-size:13px;font-weight:700;color:#1a1a1a">${v}</div></div>`).join('')}
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:18px;border:1px solid #f0f0f0;padding:16px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px">Digital Gaps</div>
+      ${[['No website detected','High opportunity','🔴'],['Zero Google reviews','Very visible gap','🔴'],['Instagram not connected','Easy win','🟡'],['WhatsApp Business missing','Quick setup','🟡']].map(([t,s,e])=>`<div style="display:flex;gap-8px;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f5f5f5;last-child:border-0"><div style="display:flex;align-items:flex-start;gap:8px;width:100%"><span style="font-size:14px;margin-top:1px">${e}</span><div><div style="font-size:11px;font-weight:600;color:#1a1a1a">${t}</div><div style="font-size:10px;color:#999">${s}</div></div></div></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;height:44px;background:#1a1a1a;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff">✦ Generate AI pitch</div>
+      <div style="height:44px;width:50px;border-radius:12px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:14px">🔖</div>
+    </div>
+  </div>
+  ${nb(1)}
+</div>`;}
+
+function gapReport(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:28px;height:28px;background:#fff;border-radius:8px;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px">←</div>
+      <span style="font-size:12px;font-weight:500;color:#999">Digital audit</span>
+    </div>
+    <div style="font-family:'Bricolage Grotesque';font-size:17px;font-weight:800;color:#1a1a1a">Mama Titi Kitchen</div>
+    <div style="font-size:11px;color:#999">Lagos Island · Restaurant</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:0 12px 60px">
+    <div style="background:#fff2f2;border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid #fecaca">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:11px;font-weight:600;color:#991b1b;margin-bottom:2px">Overall Digital Score</div><div style="font-family:'Bricolage Grotesque';font-size:28px;font-weight:800;color:#ef4444">6 / 100</div></div>
+        <div style="text-align:right"><div style="font-size:10px;color:#999;margin-bottom:4px">Scout Score</div><div style="font-size:24px;font-weight:800;color:#ef4444">94</div></div>
+      </div>
+    </div>
+    ${[
+      ['Website','Not found','🔴',0,'Critical — Biggest opportunity'],
+      ['Google Reviews','0 reviews','🔴',0,'100% open opportunity'],
+      ['Instagram','Not linked','🟡',20,'Easy to set up'],
+      ['Facebook Page','Inactive','🟡',15,'Needs refresh'],
+      ['WhatsApp Business','Missing','🔴',0,'Quick win'],
+      ['Google Maps','Listed only','🟡',30,'Needs optimising'],
+    ].map(([cat,status,e,fill,note])=>`<div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap-6px;gap:6px"><span style="font-size:14px">${e}</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">${cat}</span></div>
+        <span style="font-size:10px;font-weight:500;color:#999">${status}</span>
+      </div>
+      <div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="width:${fill||2}%;min-width:${fill?0:8}px;height:100%;background:${fill<30?'#ef4444':'#f59e0b'};border-radius:3px"></div></div>
+      <div style="font-size:10px;color:#999">${note}</div>
+    </div>`).join('')}
+  </div>
+  ${nb(1)}
+</div>`;}
+
+function savedLists(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">Saved Lists</div>
+    <div style="height:32px;background:#1a1a1a;border-radius:10px;padding:0 12px;display:flex;align-items:center;font-size:11px;font-weight:600;color:#fff">+ New</div>
+  </div>
+  <div style="flex:1;padding:0 12px 60px;display:flex;flex-direction:column;gap:10px">
+    ${[
+      ['🍽️','Lagos Restaurants','12 leads · 2 pitched','#fef3c7'],
+      ['👗','Balogun Fashion','8 leads · 0 pitched','#fdf4ff'],
+      ['🔧','Ikeja Services','5 leads · 5 pitched','#f0fdf4'],
+      ['📱','No Website Leads','19 leads · 3 pitched','#eff6ff'],
+    ].map(([e,name,sub,bg])=>`<div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px;display:flex;gap:12px;align-items:center">
+      <div style="width:44px;height:44px;background:${bg};border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">${e}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px">${name}</div>
+        <div style="font-size:10px;color:#999">${sub}</div>
+      </div>
+      <div style="font-size:16px;color:#ccc">›</div>
+    </div>`).join('')}
+    <div style="border:2px dashed #e8e8e8;border-radius:16px;padding:20px;text-align:center">
+      <div style="font-size:24px;margin-bottom:4px">+</div>
+      <div style="font-size:12px;font-weight:500;color:#999">Create new list</div>
+    </div>
+  </div>
+  ${nb(1)}
+</div>`;}
+
+function searchScreen(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 10px">
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:10px">Search</div>
+    <div style="height:42px;background:#fff;border-radius:14px;border:2px solid #1a1a1a;display:flex;align-items:center;padding:0 14px;gap:8px;margin-bottom:10px">
+      <span style="font-size:14px">🔍</span>
+      <span style="font-size:12px;color:#1a1a1a;flex:1">mama titi</span>
+      <span style="font-size:12px;color:#ccc;background:#f0f0f0;border-radius:6px;padding:2px 6px;font-size:10px">✕</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${['No Website','High Score','Restaurant','Lagos'].map((c,i)=>`<div style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:500;${i<2?'background:#1a1a1a;color:#fff':'background:#fff;color:#555;border:1px solid #e8e8e8'}">${c}</div>`).join('')}
+    </div>
+  </div>
+  <div style="padding:4px 16px 6px;font-size:11px;color:#999">3 results for "mama titi"</div>
+  <div style="flex:1;padding:0 12px 60px;display:flex;flex-direction:column;gap:8px">
+    ${[['Mama Titi Kitchen','Lagos Island · Restaurant',94,'#ef4444'],['Mama Chioma Catering','Surulere · Catering',78,'#f59e0b'],['Mama Put Express','Yaba · Food',65,'#22c55e']].map(([n,l,sc,clr])=>`<div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px;display:flex;gap:10px;align-items:center">
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:2px">${n}</div><div style="font-size:10px;color:#999">${l}</div></div>
+      ${scoreRing(sc,clr)}
+    </div>`).join('')}
+  </div>
+  ${nb(1)}
+</div>`;}
+
+function pitchHome(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 10px">
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:2px">Pitch Studio</div>
+    <div style="font-size:11px;color:#999;margin-bottom:10px">AI-powered outreach</div>
+    <div style="height:42px;background:#fff;border-radius:14px;border:1px solid #e8e8e8;display:flex;align-items:center;padding:0 14px;gap:8px"><span style="font-size:14px">🔍</span><span style="font-size:12px;color:#ccc">Find a lead to pitch...</span></div>
+  </div>
+  <div style="padding:0 12px;margin-bottom:10px">
+    <div style="background:#1a1a1a;border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center">
+      <div style="width:44px;height:44px;background:rgba(255,255,255,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✦</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:2px">Generate new pitch</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5)">Pick a lead → choose channel → send</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 16px;font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">RECENT PITCHES</div>
+  <div style="flex:1;padding:0 12px 60px;display:flex;flex-direction:column;gap:8px">
+    ${[
+      ['🍲','Mama Titi Kitchen','Cold Email · 2h ago','Sent','green'],
+      ['👗','Balogun Tailors','WhatsApp · Yesterday','Draft','gray'],
+      ['💅','Grace Beauty Hub','Cold Email · 3 days','Draft','gray'],
+    ].map(([e,name,sub,status,sc])=>`<div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:12px;display:flex;gap:10px;align-items:center">
+      <div style="width:38px;height:38px;background:#f7f7f8;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${e}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:600;color:#1a1a1a">${name}</div><div style="font-size:10px;color:#999;margin-top:1px">${sub}</div></div>
+      ${pill(status,sc)}
+    </div>`).join('')}
+  </div>
+  ${nb(2)}
+</div>`;}
+
+function pitchGen(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px;display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <div style="width:28px;height:28px;background:#f7f7f8;border-radius:8px;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px">←</div>
+    <span style="font-size:12px;color:#999">Generating pitch</span>
+  </div>
+  <div style="padding:0 16px;flex:1">
+    <div style="background:#f7f7f8;border-radius:16px;padding:12px;margin-bottom:14px;display:flex;gap:10px;align-items:center">
+      <div style="font-size:20px">🍲</div>
+      <div><div style="font-size:12px;font-weight:600;color:#1a1a1a">Mama Titi Kitchen</div><div style="font-size:10px;color:#999">Cold Email · Friendly tone</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="width:32px;height:32px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">✦</div>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#1a1a1a">Scout AI is writing your pitch</div>
+        <div style="font-size:10px;color:#999">Analysing gaps · personalising...</div>
+      </div>
+    </div>
+    <div style="background:#f7f7f8;border-radius:16px;padding:14px;margin-bottom:14px;min-height:180px">
+      <div style="font-size:10px;font-weight:600;color:#999;margin-bottom:6px;letter-spacing:0.04em">SUBJECT LINE</div>
+      <div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:10px">Quick idea for Mama Titi Kitchen 👋</div>
+      <div style="height:1px;background:#e8e8e8;margin-bottom:10px"></div>
+      <div style="font-size:11px;color:#555;line-height:1.7">Hi,<br><br>I found your restaurant on Google Maps and I love what you're doing! I noticed you don't have a website yet — I help Lagos restaurants get<span style="display:inline-block;width:7px;height:13px;background:#1a1a1a;vertical-align:text-bottom;margin-left:2px;border-radius:1px"></span></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:6px">TONE</div>
+    <div style="display:flex;gap:6px">
+      ${['Formal','Friendly','Bold','Short'].map((t,i)=>`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-size:10px;font-weight:500;${i===1?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#666'}">${t}</div>`).join('')}
+    </div>
+  </div>
+</div>`;}
+
+function pitchReady(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;background:#fff;border-radius:8px;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px">←</div><span style="font-size:12px;color:#999">Pitch ready</span></div>
+    ${pill('✓ Ready','green')}
+  </div>
+  <div style="flex:1;padding:0 12px 10px;overflow-y:auto">
+    <div style="background:#fff;border-radius:18px;border:1px solid #f0f0f0;padding:16px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:0.04em">TO</div>
+      <div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:10px">Mama Titi Kitchen — Lagos Island</div>
+      <div style="font-size:10px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:0.04em">SUBJECT</div>
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px">Quick idea for Mama Titi Kitchen 👋</div>
+      <div style="height:1px;background:#f5f5f5;margin-bottom:10px"></div>
+      <div style="font-size:11px;color:#444;line-height:1.75">Hi,<br><br>I found your restaurant on Google Maps — great spot on Balogun St! I noticed you don't have a website yet, which means people searching for food nearby can't find you.<br><br>I help Lagos restaurants build simple websites that turn Google searches into real customers. I'd love to show you a quick demo — no commitment.<br><br>Would you be open to a 10-minute call this week?</div>
+    </div>
+  </div>
+  <div style="padding:0 12px 70px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1;height:44px;background:#1a1a1a;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff">📋 Copy email</div>
+      <div style="height:44px;flex:1;border-radius:12px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#555">✎ Edit</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;height:40px;border-radius:12px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:11px;color:#555">↻ Regenerate</div>
+      <div style="flex:1;height:40px;border-radius:12px;border:1.5px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:11px;color:#555">🔖 Save</div>
+    </div>
+  </div>
+  ${nb(2)}
+</div>`;}
+
+function pitchEdit(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;background:#f7f7f8;border-radius:8px;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px">←</div><span style="font-family:'Bricolage Grotesque';font-size:15px;font-weight:700;color:#1a1a1a">Edit pitch</span></div>
+    <div style="font-size:12px;font-weight:600;color:#6366f1">Save</div>
+  </div>
+  <div style="flex:1;padding:0 16px;overflow-y:auto">
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:0.04em">SUBJECT LINE</div>
+    <div style="height:42px;background:#f7f7f8;border-radius:12px;border:2px solid #1a1a1a;display:flex;align-items:center;padding:0 14px;font-size:12px;color:#1a1a1a;margin-bottom:14px">Quick idea for Mama Titi Kitchen 👋</div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:0.04em">BODY</div>
+    <div style="background:#f7f7f8;border-radius:12px;border:2px solid #1a1a1a;padding:12px;height:160px;font-size:11px;color:#444;line-height:1.7;margin-bottom:14px">Hi,<br><br>I found your restaurant on Google Maps — great spot on Balogun St! I noticed you don't have a website yet...<span style="display:inline-block;width:7px;height:13px;background:#1a1a1a;vertical-align:text-bottom;margin-left:2px;border-radius:1px"></span></div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">TONE</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      ${['Formal','Friendly','Bold','Short'].map((t,i)=>`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-size:10px;font-weight:500;${i===1?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#666'}">${t}</div>`).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:600;color:#999;margin-bottom:8px;letter-spacing:0.04em">CALL TO ACTION</div>
+    <div style="display:flex;gap:6px;">
+      ${['Book a call','Reply here','WhatsApp me'].map((t,i)=>`<div style="flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-size:10px;font-weight:500;${i===0?'background:#1a1a1a;color:#fff':'background:#f7f7f8;color:#666'}">${t}</div>`).join('')}
+    </div>
+  </div>
+</div>`;}
+
+function aiChat(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #f0f0f0;margin-bottom:0">
+    <div style="width:32px;height:32px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px">✦</div>
+    <div><div style="font-size:13px;font-weight:700;color:#1a1a1a">Scout AI</div><div style="font-size:10px;color:#22c55e">● Online</div></div>
+  </div>
+  <div style="flex:1;padding:12px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+    <div style="max-width:80%"><div style="background:#fff;border-radius:16px 16px 16px 4px;padding:10px 12px;border:1px solid #f0f0f0;font-size:11px;color:#444;line-height:1.65">Hey! I'm Scout AI. Ask me to generate pitches, find your best leads, or explain a business's gaps.</div><div style="font-size:9px;color:#ccc;margin-top:3px;padding-left:4px">9:41 AM</div></div>
+    <div style="max-width:80%;align-self:flex-end"><div style="background:#1a1a1a;border-radius:16px 16px 4px 16px;padding:10px 12px;font-size:11px;color:#fff;line-height:1.65">Who are my top 3 leads right now?</div><div style="font-size:9px;color:#ccc;margin-top:3px;padding-right:4px;text-align:right">9:41 AM · ✓✓</div></div>
+    <div style="max-width:85%"><div style="background:#fff;border-radius:16px 16px 16px 4px;padding:10px 12px;border:1px solid #f0f0f0;font-size:11px;color:#444;line-height:1.65">Your top 3 by Scout Score right now:<br><br><b>1. Mama Titi Kitchen</b> — Score 94. No website, 0 reviews.<br><b>2. Balogun Tailors</b> — Score 82. No website, no socials.<br><b>3. Grace Beauty Hub</b> — Score 76. No website, 3 reviews.<br><br>Want me to generate pitches for all three?</div><div style="font-size:9px;color:#ccc;margin-top:3px;padding-left:4px">9:42 AM</div></div>
+    <div style="max-width:80%;align-self:flex-end"><div style="background:#1a1a1a;border-radius:16px 16px 4px 16px;padding:10px 12px;font-size:11px;color:#fff;line-height:1.65">Yes — all 3, cold email, friendly tone</div></div>
+  </div>
+  <div style="padding:8px 12px 14px;background:#fff;border-top:1px solid #f0f0f0">
+    <div style="height:42px;background:#f7f7f8;border-radius:14px;display:flex;align-items:center;padding:0 14px;gap:8px">
+      <span style="flex:1;font-size:12px;color:#bbb">Ask Scout AI anything...</span>
+      <div style="width:28px;height:28px;background:#1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff">↑</div>
+    </div>
+  </div>
+  ${nb(2)}
+</div>`;}
+
+function dashboard(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 12px;display:flex;justify-content:space-between;align-items:center">
+    <div><div style="font-size:11px;color:#999">Good morning,</div><div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">Chioma 👋</div></div>
+    <div style="width:38px;height:38px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#1d4ed8">C</div>
+  </div>
+  <div style="flex:1;padding:0 12px 60px;overflow-y:auto">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      ${[['247','Total Leads','#eff6ff','#1d4ed8'],['38','Pitches Sent','#f0fdf4','#15803d'],['12','Responses','#fef3c7','#b45309'],['31%','Reply Rate','#fdf4ff','#7c3aed']].map(([v,l,bg,tc])=>`<div style="background:${bg};border-radius:14px;padding:12px"><div style="font-family:'Bricolage Grotesque';font-size:24px;font-weight:800;color:${tc}">${v}</div><div style="font-size:10px;color:#666;margin-top:2px">${l}</div></div>`).join('')}
+    </div>
+    <div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px">This week</div>
+      <div style="display:flex;gap:4px;align-items:flex-end;height:60px">
+        ${[40,65,30,80,55,70,45].map((h,i)=>`<div style="flex:1;border-radius:4px 4px 0 0;background:${i===3?'#1a1a1a':'#e8e8e8'}" style="" ontop="${h}"></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:4px;margin-top:4px">
+        ${['M','T','W','T','F','S','S'].map((d,i)=>`<div style="flex:1;text-align:center;font-size:9px;color:${i===3?'#1a1a1a':'#ccc'};font-weight:${i===3?'600':'400'}">${d}</div>`).join('')}
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:28px">🔥</div>
+        <div><div style="font-size:13px;font-weight:700;color:#1a1a1a">7-day streak</div><div style="font-size:11px;color:#999">Keep scouting to extend it!</div></div>
+      </div>
+    </div>
+  </div>
+  ${nb(3)}
+</div>`;}
+
+function settings(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 12px;font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">Settings</div>
+  <div style="flex:1;padding:0 12px 60px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+    <div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;overflow:hidden">
+      <div style="padding:12px 14px;display:flex;align-items:center;gap-10px;gap:10px">
+        <div style="width:42px;height:42px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#1d4ed8">C</div>
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a">Chioma Adebayo</div><div style="font-size:11px;color:#999">chioma@studio.ng</div></div>
+      </div>
+    </div>
+    ${[
+      ['Notifications',['New lead alerts','Pitch opened alerts','Weekly digest']],
+      ['Radar',['Default scan radius','Lead score minimum','Auto-scan on open']],
+      ['Pitch AI',['Default tone','Email signature','Preferred language']],
+      ['Account',['Change password','Privacy settings','Delete account']],
+    ].map(([section,items])=>`<div>
+      <div style="font-size:11px;font-weight:600;color:#999;margin:4px 4px 6px;letter-spacing:0.04em">${section.toUpperCase()}</div>
+      <div style="background:#fff;border-radius:16px;border:1px solid #f0f0f0;overflow:hidden">
+        ${items.map((item,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;${i>0?'border-top:1px solid #f5f5f5':''}"><span style="font-size:12px;color:#1a1a1a">${item}</span><span style="color:#ccc;font-size:16px">›</span></div>`).join('')}
+      </div>
+    </div>`).join('')}
+  </div>
+  ${nb(3)}
+</div>`;}
+
+function alerts(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">Notifications</div>
+    <span style="font-size:11px;font-weight:500;color:#6366f1">Mark all read</span>
+  </div>
+  <div style="flex:1;padding:0 12px 60px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:11px;font-weight:600;color:#999;padding:0 4px;margin-bottom:0;letter-spacing:0.04em">TODAY</div>
+    ${[
+      ['🔴','New lead','Mama Titi Kitchen added in your area','2 min ago',true],
+      ['✉️','Pitch opened','Balogun Tailors read your email','1h ago',true],
+      ['⊙','Scan complete','24 new leads in Lagos Island','3h ago',false],
+    ].map(([e,t,b,time,unread])=>`<div style="background:${unread?'#fff':'#fafafa'};border-radius:16px;border:1px solid ${unread?'#f0f0f0':'#f5f5f5'};padding:12px;display:flex;gap:10px;align-items:flex-start">
+      <div style="width:36px;height:36px;background:#f7f7f8;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="font-size:12px;font-weight:${unread?'600':'500'};color:#1a1a1a">${t}</div>
+          ${unread?'<div style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;margin-top:3px"></div>':''}
+        </div>
+        <div style="font-size:11px;color:#999;margin-top:2px;line-height:1.5">${b}</div>
+        <div style="font-size:10px;color:#ccc;margin-top:3px">${time}</div>
+      </div>
+    </div>`).join('')}
+    <div style="font-size:11px;font-weight:600;color:#999;padding:4px 4px 0;letter-spacing:0.04em">YESTERDAY</div>
+    ${[
+      ['📊','Report ready','Your weekly scouting report is ready','Yesterday'],
+      ['🎯','New leads','18 businesses found in Surulere','2 days ago'],
+    ].map(([e,t,b,time])=>`<div style="background:#fafafa;border-radius:16px;border:1px solid #f5f5f5;padding:12px;display:flex;gap:10px;align-items:flex-start">
+      <div style="width:36px;height:36px;background:#f7f7f8;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e}</div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:500;color:#1a1a1a">${t}</div><div style="font-size:11px;color:#999;margin-top:2px">${b}</div><div style="font-size:10px;color:#ccc;margin-top:3px">${time}</div></div>
+    </div>`).join('')}
+  </div>
+  ${nb(3)}
+</div>`;}
+
+function goPro(){return `<div style="width:100%;height:100%;background:#fff;display:flex;flex-direction:column">
+  <div style="background:#1a1a1a;padding:50px 20px 24px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 18px;font-size:10px;color:rgba(255,255,255,0.4)"><span>9:41</span><span>●●● WiFi ⬛</span></div>
+    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,0.05)"></div>
+    <div style="position:absolute;top:10px;right:10px;width:80px;height:80px;border-radius:50%;border:1px solid rgba(255,255,255,0.04)"></div>
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;margin-bottom:10px">
+      <span style="font-size:12px">✦</span>
+      <span style="font-size:11px;font-weight:600;color:#fff">Founders Scout Pro</span>
+    </div>
+    <div style="font-family:'Bricolage Grotesque';font-size:24px;font-weight:800;color:#fff;margin-bottom:4px">Find unlimited clients</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5)">Scan, pitch, close — without limits</div>
+  </div>
+  <div style="flex:1;padding:16px 16px 20px;overflow-y:auto">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      ${[['Monthly','₦4,999','/mo',''],['Annual','₦39,999','/yr','Save 33%']].map(([l,p,per,badge],i)=>`<div style="flex:1;border-radius:16px;padding:14px;${i===1?'background:#f0fdf4;border:2px solid #16a34a':'border:1.5px solid #e8e8e8'}">
+        <div style="font-size:11px;font-weight:600;color:${i===1?'#16a34a':'#999'};margin-bottom:4px">${l}</div>
+        <div style="font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:#1a1a1a">${p}<span style="font-size:12px;font-weight:400;color:#999">${per}</span></div>
+        ${badge?`<div style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;margin-top:6px">${badge}</div>`:''}
+      </div>`).join('')}
+    </div>
+    ${['Unlimited radar scans','Unlimited AI pitches','Real-time lead alerts (WebSocket)','Export leads to CSV','Pitch history & analytics','Priority support'].map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5"><div style="width:22px;height:22px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#16a34a;flex-shrink:0">✓</div><span style="font-size:12px;color:#1a1a1a">${f}</span></div>`).join('')}
+    <div style="margin-top:14px">${bigBtn('Start 7-day free trial →','#1a1a1a')}</div>
+    <div style="text-align:center;font-size:11px;color:#ccc">Cancel anytime · No credit card needed</div>
+  </div>
+</div>`;}
+
+function history(){return `<div style="width:100%;height:100%;background:#f7f7f8;display:flex;flex-direction:column">
+  ${sb(true)}
+  <div style="padding:4px 16px 12px;font-family:'Bricolage Grotesque';font-size:20px;font-weight:800;color:#1a1a1a">Pitch History</div>
+  <div style="flex:1;padding:0 12px 60px;overflow-y:auto">
+    <div style="font-size:11px;font-weight:600;color:#999;padding:0 4px 8px;letter-spacing:0.04em">THIS WEEK</div>
+    <div style="position:relative;padding-left:20px">
+      <div style="position:absolute;left:7px;top:8px;bottom:0;width:1px;background:#e8e8e8"></div>
+      ${[
+        ['🍲','Mama Titi Kitchen','Cold Email · Sent & Opened','2h ago','green','Opened'],
+        ['👗','Balogun Tailors','WhatsApp · Sent','Yesterday','blue','Sent'],
+        ['💅','Grace Beauty Hub','Cold Email · Draft','3 days ago','gray','Draft'],
+        ['🔧','Femi Tech Hub','Cold Email · No reply','5 days ago','amber','No reply'],
+      ].map(([e,name,sub,time,sc,status])=>`<div style="position:relative;margin-bottom:10px">
+        <div style="position:absolute;left:-16px;top:10px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #e8e8e8"></div>
+        <div style="background:#fff;border-radius:14px;border:1px solid #f0f0f0;padding:12px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:36px;height:36px;background:#f7f7f8;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e}</div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:12px;font-weight:600;color:#1a1a1a">${name}</div>
+                ${pill(status,sc)}
+              </div>
+              <div style="font-size:10px;color:#999;margin-top:2px">${sub} · ${time}</div>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>
+  ${nb(2)}
+</div>`;}
+
+// init
+const weekBars=document.querySelectorAll('[ontop]');
+weekBars.forEach(b=>{const h=parseInt(b.getAttribute('ontop'));b.style.height=h+'%'});
+show('all',document.querySelector('.tab.on'));
+</script>
